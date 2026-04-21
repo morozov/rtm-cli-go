@@ -2,7 +2,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -85,7 +84,7 @@ func newRootCommand() *cobra.Command {
 	commands.Register(
 		root,
 		func() *rtm.Client { return client },
-		func(w io.Writer, body json.RawMessage) error { return formatter(w, body) },
+		func(w io.Writer, body any) error { return formatter(w, body) },
 	)
 	root.AddCommand(newManifestCommand())
 

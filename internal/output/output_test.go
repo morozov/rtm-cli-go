@@ -2,44 +2,45 @@ package output
 
 import (
 	"bytes"
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+type sampleBody struct {
+	Name  string  `json:"name"`
+	Count int64   `json:"count"`
+	Flag  bool    `json:"flag"`
+}
+
 func TestJSONEmptyBodyIsSilent(t *testing.T) {
-	for _, body := range []string{"", "{}", "  {}  "} {
+	for _, body := range []any{nil, (*sampleBody)(nil), struct{}{}, &struct{}{}} {
 		var buf bytes.Buffer
-		require.NoError(t, JSON(&buf, json.RawMessage(body)))
-		assert.Empty(t, buf.String(), "empty body %q should produce no output", body)
+		require.NoError(t, JSON(&buf, body))
+		assert.Empty(t, buf.String(), "empty body %#v should produce no output", body)
 	}
 }
 
 func TestJSONPrettyPrints(t *testing.T) {
 	var buf bytes.Buffer
-	require.NoError(t, JSON(&buf, json.RawMessage(`{"frob":"abc"}`)))
-	assert.Equal(t, "{\n  \"frob\": \"abc\"\n}\n", buf.String())
+	require.NoError(t, JSON(&buf, sampleBody{Name: "foo", Count: 42, Flag: true}))
+	assert.Equal(t, "{\n  \"name\": \"foo\",\n  \"count\": 42,\n  \"flag\": true\n}\n", buf.String())
+}
+
+func TestYAMLEmitsProperTypes(t *testing.T) {
+	var buf bytes.Buffer
+	require.NoError(t, YAML(&buf, sampleBody{Name: "foo", Count: 1674089, Flag: true}))
+	out := buf.String()
+	assert.Contains(t, out, "name: foo")
+	assert.Contains(t, out, "count: 1674089")
+	assert.Contains(t, out, "flag: true")
+	// Should NOT render count in scientific notation.
+	assert.NotContains(t, out, "1.674089e+06")
 }
 
 func TestYAMLEmptyBodyIsSilent(t *testing.T) {
 	var buf bytes.Buffer
-	require.NoError(t, YAML(&buf, json.RawMessage(`{}`)))
+	require.NoError(t, YAML(&buf, struct{}{}))
 	assert.Empty(t, buf.String())
-}
-
-func TestYAMLEmitsYAML(t *testing.T) {
-	var buf bytes.Buffer
-	require.NoError(t, YAML(&buf, json.RawMessage(`{"frob":"abc","nested":{"k":1}}`)))
-	out := buf.String()
-	assert.Contains(t, out, "frob: abc")
-	assert.Contains(t, out, "nested:")
-	assert.Contains(t, out, "k: 1")
-}
-
-func TestJSONRejectsInvalidBody(t *testing.T) {
-	err := JSON(&bytes.Buffer{}, json.RawMessage(`not json`))
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "decode response body")
 }
