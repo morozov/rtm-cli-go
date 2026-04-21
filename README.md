@@ -56,18 +56,49 @@ go build -o rtm ./cmd/rtm
 Every fresh clone (and every CI run) repeats these two steps;
 the generated output is never committed.
 
+## Configuration
+
+The CLI reads credentials from three sources, with later sources
+overriding earlier ones:
+
+1. Config file at `$XDG_CONFIG_HOME/rtm/config.yaml` (default
+   `~/.config/rtm/config.yaml` on Linux/macOS;
+   `%AppData%\rtm\config.yaml` on Windows). A `$RTM_CONFIG_FILE`
+   env var overrides the path.
+2. Environment variables `RTM_API_KEY`, `RTM_API_SECRET`,
+   `RTM_AUTH_TOKEN`.
+3. Command-line flags `--key`, `--secret`, `--token`.
+
+A missing config file is fine — env and flags still work. A
+malformed config file is a fatal error.
+
+### Config file format
+
+```yaml
+# ~/.config/rtm/config.yaml
+api_key: your-rtm-api-key
+api_secret: your-rtm-api-secret
+auth_token: your-rtm-auth-token
+```
+
+Protect it: `chmod 600 ~/.config/rtm/config.yaml`. The CLI warns
+to stderr on every invocation if the file is readable by group
+or others. It also warns on unknown keys (likely typos).
+
+### Required vs optional
+
+- `api_key` / `api_secret` — always required.
+- `auth_token` — required only for methods that need a
+  logged-in user (most writes and some reads).
+
 ## Run
 
 ```sh
-rtm --key $RTM_API_KEY --secret $RTM_API_SECRET --token $RTM_AUTH_TOKEN \
-    <service> <method> [flags]
+rtm <service> <method> [flags]
 ```
 
-`--key` and `--secret` are required for every invocation.
-`--token` is required for methods that need a logged-in user
-(most writes and some reads).
-
-The CLI mirrors the RTM service hierarchy:
+Assuming credentials are configured (via any of the three
+sources above), the CLI mirrors the RTM service hierarchy:
 
 ```sh
 rtm reflection get-methods
@@ -79,6 +110,27 @@ rtm tasks notes add --list-id 1 --taskseries-id 2 --task-id 3 --note-title "..."
 
 Each invocation makes one RTM call and writes the raw JSON
 response body to stdout.
+
+## Shell completion
+
+Cobra ships a `completion` subcommand that generates scripts for
+bash, zsh, fish, and powershell. Install the one for your shell:
+
+```sh
+# bash (Linux)
+rtm completion bash | sudo tee /etc/bash_completion.d/rtm
+
+# zsh (macOS default, Oh My Zsh users: put it on fpath)
+rtm completion zsh > "${fpath[1]}/_rtm"
+
+# fish
+rtm completion fish > ~/.config/fish/completions/rtm.fish
+
+# powershell
+rtm completion powershell | Out-String | Invoke-Expression
+```
+
+`rtm completion <shell> --help` shows per-shell install notes.
 
 ## Regenerate
 
