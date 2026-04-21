@@ -38,6 +38,11 @@ func newRootCommand() *cobra.Command {
 	root.PersistentFlags().String("token", "", "RTM auth token (or $RTM_AUTH_TOKEN, or auth_token in config)")
 
 	root.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
+		// Meta commands are pure introspection; they don't touch RTM
+		// and therefore don't need credentials.
+		if cmd.Name() == manifestCommandName {
+			return nil
+		}
 		cfg, err := config.Load(cmd.Root().PersistentFlags())
 		if err != nil {
 			return err
@@ -50,6 +55,7 @@ func newRootCommand() *cobra.Command {
 	}
 
 	commands.Register(root, func() *rtm.Client { return client })
+	root.AddCommand(newManifestCommand())
 
 	return root
 }

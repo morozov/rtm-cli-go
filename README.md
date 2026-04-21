@@ -111,6 +111,23 @@ rtm tasks notes add --list-id 1 --taskseries-id 2 --task-id 3 --note-title "..."
 Each invocation makes one RTM call and writes the raw JSON
 response body to stdout.
 
+## Programmatic discovery
+
+Tooling and AI agents can enumerate the full CLI surface in a
+single call:
+
+```sh
+rtm manifest
+```
+
+The command walks the cobra tree and emits JSON: every
+subcommand, its short/long descriptions, and its flags (name,
+type, description, default, `required`). Use it instead of
+crawling `rtm --help` recursively.
+
+Credentials are not required — `manifest` is pure introspection
+and never touches RTM.
+
 ## Shell completion
 
 Cobra ships a `completion` subcommand that generates scripts for
