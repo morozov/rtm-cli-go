@@ -17,12 +17,19 @@ const manifestCommandName = "manifest"
 // manifestNode is the JSON shape `rtm manifest` emits per cobra
 // command. The tree is rooted at `rtm` itself.
 type manifestNode struct {
-	Name            string         `json:"name"`
-	Short           string         `json:"short,omitempty"`
-	Long            string         `json:"long,omitempty"`
-	Flags           []manifestFlag `json:"flags,omitempty"`
-	PersistentFlags []manifestFlag `json:"persistent_flags,omitempty"`
-	Commands        []manifestNode `json:"commands,omitempty"`
+	Name            string              `json:"name"`
+	Short           string              `json:"short,omitempty"`
+	Long            string              `json:"long,omitempty"`
+	Flags           []manifestFlag      `json:"flags,omitempty"`
+	PersistentFlags []manifestFlag      `json:"persistent_flags,omitempty"`
+	References      []manifestReference `json:"references,omitempty"`
+	Commands        []manifestNode      `json:"commands,omitempty"`
+}
+
+// manifestReference is the JSON shape for a single footnote.
+type manifestReference struct {
+	Marker string `json:"marker"`
+	URL    string `json:"url"`
 }
 
 // manifestFlag is the JSON shape for a single cobra flag.
@@ -60,6 +67,12 @@ func collectManifestNode(c *cobra.Command) manifestNode {
 		Name:  c.Name(),
 		Short: c.Short,
 		Long:  c.Long,
+	}
+	for _, r := range collectReferences(c) {
+		node.References = append(node.References, manifestReference{
+			Marker: fmt.Sprintf("[^%d]", r.N),
+			URL:    r.URL,
+		})
 	}
 	// Cobra considers locally-defined persistent flags to also be
 	// "local". De-dupe so each flag appears in exactly one slot.

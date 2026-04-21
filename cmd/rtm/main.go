@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -88,5 +89,64 @@ func newRootCommand() *cobra.Command {
 	)
 	root.AddCommand(newManifestCommand())
 
+	// Wrap the help function on root; cobra inherits it down the
+	// tree. The wrapper appends a References section whenever the
+	// command carries `ref.N` annotations (emitted by the
+	// generator for commands whose descriptions had anchors).
+	root.SetHelpFunc(withReferencesFooter())
+
 	return root
+}
+
+// referencePrefix keys the per-command footnote annotations the
+// generator emits into each cobra.Command (ref.1, ref.2, …).
+const referencePrefix = "ref."
+
+// withReferencesFooter returns a cobra help function that runs
+// cobra's default help output and then appends a "References:"
+// footer when the command has any `ref.N` annotations.
+func withReferencesFooter() func(*cobra.Command, []string) {
+	return func(cmd *cobra.Command, _ []string) {
+		out := cmd.OutOrStderr()
+		// Replicate cobra's default template: long-or-short
+		// description, blank line, usage.
+		if desc := strings.TrimRight(cmd.Long, " \t\n"); desc != "" {
+			fmt.Fprintln(out, desc)
+			fmt.Fprintln(out)
+		} else if desc := strings.TrimRight(cmd.Short, " \t\n"); desc != "" {
+			fmt.Fprintln(out, desc)
+			fmt.Fprintln(out)
+		}
+		if cmd.Runnable() || cmd.HasSubCommands() {
+			fmt.Fprint(out, cmd.UsageString())
+		}
+		if refs := collectReferences(cmd); len(refs) > 0 {
+			fmt.Fprintln(out)
+			fmt.Fprintln(out, "References:")
+			for _, r := range refs {
+				fmt.Fprintf(out, "  [^%d] %s\n", r.N, r.URL)
+			}
+		}
+	}
+}
+
+// commandReference is the in-host view of a single footnote entry.
+type commandReference struct {
+	N   int
+	URL string
+}
+
+// collectReferences pulls `ref.1`, `ref.2`, … from cmd.Annotations
+// and returns them in numeric order. Missing numbers stop the
+// walk.
+func collectReferences(cmd *cobra.Command) []commandReference {
+	var refs []commandReference
+	for n := 1; ; n++ {
+		url, ok := cmd.Annotations[fmt.Sprintf("%s%d", referencePrefix, n)]
+		if !ok {
+			break
+		}
+		refs = append(refs, commandReference{N: n, URL: url})
+	}
+	return refs
 }
