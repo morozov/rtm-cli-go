@@ -1,0 +1,9 @@
+/spec.json
+/rtm
+
+# Generated code. Produced by `go generate ./...` on every build;
+# never committed. Only the hand-written gen.go anchors are tracked.
+/internal/rtm/*
+!/internal/rtm/gen.go
+/internal/commands/*
+!/internal/commands/gen.go
