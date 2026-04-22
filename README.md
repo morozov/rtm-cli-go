@@ -3,20 +3,12 @@
 Command-line client for the
 [Remember The Milk API](https://www.rememberthemilk.com/services/api/).
 
-Most of this module is hand-written. Two subdirectories are
-produced by [rtm-gen-go](https://github.com/morozov/rtm-gen-go)
-at build time and are **not** committed:
-
-- `internal/rtm/` — the RTM API client (stdlib-only).
-- `internal/commands/` — the cobra command tree, exposed through
-  a `Register(root, provider)` function that `cmd/rtm/main.go`
-  calls.
-
-Everything else is hand-written: the binary entry point, the
-root cobra command, persistent flags, credential sourcing, and
-anything else that isn't an RTM API binding. Bugs in generated
-code should be filed against the **generator** (`rtm-gen-go`),
-not here.
+The RTM API client and cobra command tree under `internal/rtm/`
+and `internal/commands/` are produced from RTM's reflection
+spec by [rtm-gen-go](https://github.com/morozov/rtm-gen-go) and
+are **not** committed — `go generate` writes them on demand.
+If your IDE flags unresolved symbols in a fresh checkout, run
+`go generate ./...` first.
 
 ## Building from source
 
@@ -29,21 +21,18 @@ Building requires three things:
    (`../rtm-gen-go/`). `go.mod` carries a local `replace` that
    points there until `rtm-gen-go` is published.
 
-### One-time setup
+### Spec source
+
+The generator needs an RTM reflection spec. By default `go
+generate ./...` reads `./spec.json` — keep a cache there so
+builds are offline-friendly:
 
 ```sh
-# Place a cached RTM spec at ./spec.json. It is gitignored.
 cp /path/to/your/api.json spec.json
 ```
 
-Or fetch live:
-
-```sh
-# Requires RTM credentials. Live fetch calls the reflection API
-# directly; the generator itself does not need a pre-existing
-# spec file.
-# (See "Regenerate" below — the live-fetch flags go on rtm-gen.)
-```
+Or drive the generator off a live fetch — see "Regenerate"
+below for the flag form.
 
 ### Build
 
@@ -67,7 +56,7 @@ overriding earlier ones:
    env var overrides the path.
 2. Environment variables `RTM_API_KEY`, `RTM_API_SECRET`,
    `RTM_AUTH_TOKEN`.
-3. Command-line flags `--key`, `--secret`, `--token`.
+3. Command-line flags `--key=…`, `--secret=…`, `--token=…`.
 
 A missing config file is fine — env and flags still work. A
 malformed config file is a fatal error.
@@ -91,6 +80,32 @@ or others. It also warns on unknown keys (likely typos).
 - `auth_token` — required only for methods that need a
   logged-in user (most writes and some reads).
 
+## First-time login
+
+Before the CLI can hit any user-scoped method, you need an
+`auth_token`. RTM issues these via a browser approval flow —
+`rtm auth login` drives the whole ceremony end-to-end:
+
+```sh
+rtm auth login                     # read-only token (default)
+rtm auth login --perms=write       # ask for write access
+rtm auth login --perms=delete      # ask for delete-grade access
+rtm auth login --no-browser        # just print the URL; don't launch
+rtm auth login --force             # replace a working token
+```
+
+The command requests a frob, builds the signed approval URL,
+opens it in your browser (unless `--no-browser`), waits for you
+to click "Allow", exchanges the frob for a token, verifies the
+token, and writes it atomically to the config file. If the
+config file already holds a working token, it refuses without
+`--force`; if the stored token is dead, it proceeds silently.
+
+There is no `rtm auth logout` — RTM has no server-side
+revocation endpoint. Revoke tokens from the
+[authorized-apps page](https://www.rememberthemilk.com/settings/apps)
+in RTM's web UI.
+
 ## Run
 
 ```sh
@@ -104,12 +119,61 @@ sources above), the CLI mirrors the RTM service hierarchy:
 rtm reflection get-methods
 rtm auth check-token
 rtm lists get-list
-rtm tasks add --name "Ship it" --list-id 123
-rtm tasks notes add --list-id 1 --taskseries-id 2 --task-id 3 --note-title "..."
+rtm tasks add --name="Ship it" --list-id=123
+rtm tasks set-priority --list-id=1 --taskseries-id=2 --task-id=3 --priority=2
+rtm tasks set-tags --list-id=1 --taskseries-id=2 --task-id=3 --tags=shipit,work
+rtm tasks notes add --list-id=1 --taskseries-id=2 --task-id=3 --note-title="..."
 ```
 
-Each invocation makes one RTM call and writes the raw JSON
-response body to stdout.
+Each invocation makes one RTM call, unwraps the `rsp`/`stat`
+envelope, and writes a typed response to stdout.
+
+## Output formats
+
+Select with `--output=…` (short form `-o`):
+
+```sh
+rtm lists get-list                # json, default
+rtm lists get-list --output=yaml  # yaml
+rtm lists get-list -o yaml        # short form
+```
+
+Both formats emit typed values — integer IDs are numbers, not
+strings; booleans are `true`/`false`, not `"0"`/`"1"`; empty
+timestamps are `null`, not `""`. Enum fields (`priority`,
+`perms`, `direction`) render as their wire values (`"N"`,
+`"read"`, `"up"`).
+
+## Exit codes
+
+- `0` — success.
+- `1` — internal error (bad flag, parse failure, I/O, etc.).
+- `2` — the RTM API returned `stat=fail`. The error message
+  carries the RTM code and description, e.g.
+  `rtm api error 98: Login failed / Invalid auth token`.
+
+## Typed flags and enums
+
+Arguments with a known semantic type are declared as typed cobra
+flags — `--list-id=1` accepts an integer, `--archive` accepts a
+bool. Mistyped values fail locally with cobra's standard error
+before any HTTP call.
+
+Enum arguments (`--priority`, `--direction`) validate against a
+closed set and register shell completion:
+
+```sh
+rtm tasks set-priority --priority=banana ...
+# Error: invalid --priority "banana": expected 1, 2, 3, N
+```
+
+Comma-delimited list args (`--tags`) accept both repeated flags
+and one comma-joined value:
+
+```sh
+rtm tasks set-tags ... --tags=urgent --tags=review
+rtm tasks set-tags ... --tags=urgent,review
+```
 
 ## Programmatic discovery
 
@@ -122,8 +186,9 @@ rtm manifest
 
 The command walks the cobra tree and emits JSON: every
 subcommand, its short/long descriptions, and its flags (name,
-type, description, default, `required`). Use it instead of
-crawling `rtm --help` recursively.
+type, description, default, `required`, `enum_values` when the
+flag is a closed set, plus any `[^N]` reference footnotes from
+RTM's docs). Use it instead of crawling `rtm --help` recursively.
 
 Credentials are not required — `manifest` is pure introspection
 and never touches RTM.
@@ -161,14 +226,15 @@ That invokes, via `//go:generate` directives in
 `internal/rtm/gen.go` and `internal/commands/gen.go`:
 
 ```sh
-go tool rtm-gen client -spec ./spec.json -out internal/rtm
-go tool rtm-gen cli    -spec ./spec.json -out internal/commands \
-                       -client-module github.com/morozov/rtm-cli-go/internal/rtm
+go tool rtm-gen client --spec=./spec.json --out=internal/rtm
+go tool rtm-gen cli    --spec=./spec.json --out=internal/commands \
+                       --client-module=github.com/morozov/rtm-cli-go/internal/rtm
 ```
 
-Swap `-spec ./spec.json` for `-key $RTM_API_KEY -secret
-$RTM_API_SECRET` in the directives (or run `rtm-gen` manually)
-to fetch the spec live instead of reading from a local cache.
+Swap `--spec=./spec.json` for `--key=$RTM_API_KEY
+--secret=$RTM_API_SECRET` in the directives (or run `rtm-gen`
+manually) to fetch the spec live instead of reading from a
+local cache.
 
 ## Distribution
 
@@ -176,23 +242,3 @@ to fetch the spec live instead of reading from a local cache.
 **not** supported — the module source on a proxy carries no
 generated code. Distribute pre-built binaries (e.g. GitHub
 releases) produced by a build that ran `go generate` first.
-
-## Layout
-
-```
-rtm-cli-go/
-├── cmd/rtm/main.go          (hand-written)
-├── internal/
-│   ├── rtm/
-│   │   ├── gen.go           (hand-written; //go:generate anchor)
-│   │   ├── client.go        (generated, gitignored)
-│   │   └── <service>.go     (generated, gitignored)
-│   └── commands/
-│       ├── gen.go           (hand-written; //go:generate anchor)
-│       ├── register.go      (generated, gitignored)
-│       └── <service>.go     (generated, gitignored)
-├── spec.json                (developer-local cache, gitignored)
-├── go.mod
-├── go.sum
-└── README.md
-```
