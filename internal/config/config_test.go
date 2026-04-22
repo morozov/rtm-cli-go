@@ -196,6 +196,91 @@ func TestLoadNoWarnOn600(t *testing.T) {
 	assert.NotContains(t, buf.String(), "readable")
 }
 
+func TestReadMissingFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "absent.yaml")
+	cfg, exists, err := Read(path)
+	require.NoError(t, err)
+	assert.False(t, exists)
+	assert.Equal(t, Config{}, cfg)
+}
+
+func TestReadExistingFile(t *testing.T) {
+	dir := t.TempDir()
+	path := writeConfig(t, dir, "api_key: k\napi_secret: s\nauth_token: t\n")
+
+	cfg, exists, err := Read(path)
+	require.NoError(t, err)
+	assert.True(t, exists)
+	assert.Equal(t, Config{APIKey: "k", APISecret: "s", AuthToken: "t"}, cfg)
+}
+
+func TestReadIgnoresEnvAndFlags(t *testing.T) {
+	clearRTMEnv(t)
+	t.Setenv("RTM_API_KEY", "env-k")
+	dir := t.TempDir()
+	path := writeConfig(t, dir, "api_key: file-k\n")
+
+	cfg, exists, err := Read(path)
+	require.NoError(t, err)
+	assert.True(t, exists)
+	assert.Equal(t, "file-k", cfg.APIKey, "Read MUST NOT merge env layer")
+}
+
+func TestWriteCreatesNewFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "nested", "config.yaml")
+
+	err := Write(path, Config{APIKey: "k", APISecret: "s", AuthToken: "t"})
+	require.NoError(t, err)
+
+	info, err := os.Stat(path)
+	require.NoError(t, err)
+	if runtime.GOOS != "windows" {
+		assert.Equal(t, os.FileMode(0o600), info.Mode().Perm())
+	}
+
+	cfg, exists, err := Read(path)
+	require.NoError(t, err)
+	assert.True(t, exists)
+	assert.Equal(t, Config{APIKey: "k", APISecret: "s", AuthToken: "t"}, cfg)
+}
+
+func TestWritePreservesOtherKeys(t *testing.T) {
+	dir := t.TempDir()
+	path := writeConfig(t, dir, "api_key: k\napi_secret: s\nfavorite_color: teal\n")
+
+	err := Write(path, Config{AuthToken: "new-token"})
+	require.NoError(t, err)
+
+	data, err := os.ReadFile(path)
+	require.NoError(t, err)
+	body := string(data)
+	assert.Contains(t, body, "api_key: k", "unchanged managed key preserved")
+	assert.Contains(t, body, "api_secret: s")
+	assert.Contains(t, body, "auth_token: new-token", "target key overwritten")
+	assert.Contains(t, body, "favorite_color: teal", "unknown key preserved verbatim")
+}
+
+func TestWriteOnlyOverwritesNonEmpty(t *testing.T) {
+	dir := t.TempDir()
+	path := writeConfig(t, dir, "api_key: keep-k\napi_secret: keep-s\nauth_token: keep-t\n")
+
+	// Writing an all-empty Config must leave the file untouched in content.
+	err := Write(path, Config{})
+	require.NoError(t, err)
+
+	cfg, _, err := Read(path)
+	require.NoError(t, err)
+	assert.Equal(t, Config{APIKey: "keep-k", APISecret: "keep-s", AuthToken: "keep-t"}, cfg)
+}
+
+func TestPathMatchesFilePath(t *testing.T) {
+	t.Setenv("RTM_CONFIG_FILE", "/custom/rtm.yaml")
+	p, err := Path()
+	require.NoError(t, err)
+	assert.Equal(t, "/custom/rtm.yaml", p)
+}
+
 func TestFilePathOverride(t *testing.T) {
 	t.Setenv("RTM_CONFIG_FILE", "/custom/rtm.yaml")
 	path, err := filePath()

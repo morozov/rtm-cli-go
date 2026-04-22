@@ -16,6 +16,7 @@ import (
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 // Config is the resolved set of credentials.
@@ -95,6 +96,109 @@ func loadWith(flags *pflag.FlagSet, warn io.Writer) (Config, error) {
 		APISecret: v.GetString("api_secret"),
 		AuthToken: v.GetString("auth_token"),
 	}, nil
+}
+
+// Path returns where the CLI looks for its config file. The
+// result is the same path Load reads from, so writes go back to
+// where reads came from.
+func Path() (string, error) {
+	return filePath()
+}
+
+// Read parses the YAML config file at path and returns the
+// credentials it holds. The second return is false when the
+// file does not exist; callers typically use that to decide
+// whether to create a fresh file or merge into an existing one.
+// Unlike Load, Read does not consult env or flags.
+func Read(path string) (Config, bool, error) {
+	data, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return Config{}, false, nil
+	}
+	if err != nil {
+		return Config{}, false, fmt.Errorf("read %s: %w", path, err)
+	}
+	var raw struct {
+		APIKey    string `yaml:"api_key"`
+		APISecret string `yaml:"api_secret"`
+		AuthToken string `yaml:"auth_token"`
+	}
+	if err := yaml.Unmarshal(data, &raw); err != nil {
+		return Config{}, true, fmt.Errorf("parse %s: %w", path, err)
+	}
+	return Config{
+		APIKey:    raw.APIKey,
+		APISecret: raw.APISecret,
+		AuthToken: raw.AuthToken,
+	}, true, nil
+}
+
+// Write persists cfg to path atomically. If the file already
+// exists, other top-level YAML keys in the file are preserved
+// verbatim; only api_key / api_secret / auth_token are updated
+// from cfg (and only if non-empty). Comments may be lost.
+//
+// The parent directory is created with mode 0o700; the file is
+// written with mode 0o600 via a tempfile + rename so a partial
+// write cannot corrupt an existing config.
+func Write(path string, cfg Config) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return fmt.Errorf("create %s: %w", dir, err)
+	}
+
+	merged := map[string]any{}
+	if data, err := os.ReadFile(path); err == nil {
+		if err := yaml.Unmarshal(data, &merged); err != nil {
+			return fmt.Errorf("parse existing %s: %w", path, err)
+		}
+		if merged == nil {
+			merged = map[string]any{}
+		}
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("read existing %s: %w", path, err)
+	}
+
+	if cfg.APIKey != "" {
+		merged["api_key"] = cfg.APIKey
+	}
+	if cfg.APISecret != "" {
+		merged["api_secret"] = cfg.APISecret
+	}
+	if cfg.AuthToken != "" {
+		merged["auth_token"] = cfg.AuthToken
+	}
+
+	out, err := yaml.Marshal(merged)
+	if err != nil {
+		return fmt.Errorf("marshal config: %w", err)
+	}
+
+	tmp, err := os.CreateTemp(dir, ".config-*.yaml")
+	if err != nil {
+		return fmt.Errorf("create temp file: %w", err)
+	}
+	tmpPath := tmp.Name()
+	cleanup := func() { _ = os.Remove(tmpPath) }
+	if _, err := tmp.Write(out); err != nil {
+		_ = tmp.Close()
+		cleanup()
+		return fmt.Errorf("write temp file: %w", err)
+	}
+	if err := tmp.Chmod(0o600); err != nil {
+		_ = tmp.Close()
+		cleanup()
+		return fmt.Errorf("chmod temp file: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		cleanup()
+		return fmt.Errorf("close temp file: %w", err)
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		cleanup()
+		return fmt.Errorf("rename into place: %w", err)
+	}
+	return nil
 }
 
 // filePath returns where the CLI looks for its config file.

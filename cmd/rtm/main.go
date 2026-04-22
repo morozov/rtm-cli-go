@@ -88,6 +88,13 @@ func newRootCommand() *cobra.Command {
 	)
 	root.AddCommand(newManifestCommand())
 
+	// The generated `auth` group is a raw passthrough to RTM
+	// methods; `auth login` is hand-written on top and drives
+	// the full frob/approval/token ceremony.
+	if authCmd, _, err := root.Find([]string{"auth"}); err == nil && authCmd != nil {
+		authCmd.AddCommand(newAuthLoginCmd(func() *rtm.Client { return client }))
+	}
+
 	// Wrap the help function on root; cobra inherits it down the
 	// tree. The wrapper appends a References section whenever the
 	// command carries `ref.N` annotations (emitted by the
