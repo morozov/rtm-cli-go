@@ -15,24 +15,12 @@ If your IDE flags unresolved symbols in a fresh checkout, run
 Building requires three things:
 
 1. A Go toolchain (1.26+).
-2. A spec source — either a local `spec.json` cache or RTM API
-   credentials for live fetch.
+2. A `spec.json` at the repo root. See
+   [rtm-gen-go](https://github.com/morozov/rtm-gen-go) for how
+   to obtain or refresh one.
 3. A local checkout of `rtm-gen-go` as a sibling directory
    (`../rtm-gen-go/`). `go.mod` carries a local `replace` that
    points there until `rtm-gen-go` is published.
-
-### Spec source
-
-The generator needs an RTM reflection spec. By default `go
-generate ./...` reads `./spec.json` — keep a cache there so
-builds are offline-friendly:
-
-```sh
-cp /path/to/your/api.json spec.json
-```
-
-Or drive the generator off a live fetch — see "Regenerate"
-below for the flag form.
 
 ### Build
 
@@ -222,19 +210,9 @@ The generator is pinned via the `tool` directive in `go.mod`:
 go generate ./...
 ```
 
-That invokes, via `//go:generate` directives in
-`internal/rtm/gen.go` and `internal/commands/gen.go`:
-
-```sh
-go tool rtm-gen client --spec=./spec.json --out=internal/rtm
-go tool rtm-gen cli    --spec=./spec.json --out=internal/commands \
-                       --client-module=github.com/morozov/rtm-cli-go/internal/rtm
-```
-
-Swap `--spec=./spec.json` for `--key=$RTM_API_KEY
---secret=$RTM_API_SECRET` in the directives (or run `rtm-gen`
-manually) to fetch the spec live instead of reading from a
-local cache.
+Both packages regenerate from `./spec.json`. See
+[rtm-gen-go](https://github.com/morozov/rtm-gen-go) for the
+flags and for live-fetch alternatives.
 
 ## Distribution
 
