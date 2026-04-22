@@ -9,9 +9,9 @@ import (
 )
 
 type sampleBody struct {
-	Name  string  `json:"name"`
-	Count int64   `json:"count"`
-	Flag  bool    `json:"flag"`
+	Name  string `json:"name"`
+	Count int64  `json:"count"`
+	Flag  bool   `json:"flag"`
 }
 
 func TestJSONEmptyBodyIsSilent(t *testing.T) {

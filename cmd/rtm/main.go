@@ -117,20 +117,20 @@ func withReferencesFooter() func(*cobra.Command, []string) {
 		// Replicate cobra's default template: long-or-short
 		// description, blank line, usage.
 		if desc := strings.TrimRight(cmd.Long, " \t\n"); desc != "" {
-			fmt.Fprintln(out, desc)
-			fmt.Fprintln(out)
+			_, _ = fmt.Fprintln(out, desc)
+			_, _ = fmt.Fprintln(out)
 		} else if desc := strings.TrimRight(cmd.Short, " \t\n"); desc != "" {
-			fmt.Fprintln(out, desc)
-			fmt.Fprintln(out)
+			_, _ = fmt.Fprintln(out, desc)
+			_, _ = fmt.Fprintln(out)
 		}
 		if cmd.Runnable() || cmd.HasSubCommands() {
-			fmt.Fprint(out, cmd.UsageString())
+			_, _ = fmt.Fprint(out, cmd.UsageString())
 		}
 		if refs := collectReferences(cmd); len(refs) > 0 {
-			fmt.Fprintln(out)
-			fmt.Fprintln(out, "References:")
+			_, _ = fmt.Fprintln(out)
+			_, _ = fmt.Fprintln(out, "References:")
 			for _, r := range refs {
-				fmt.Fprintf(out, "  [^%d] %s\n", r.N, r.URL)
+				_, _ = fmt.Fprintf(out, "  [^%d] %s\n", r.N, r.URL)
 			}
 		}
 	}

@@ -101,7 +101,7 @@ func runAuthLogin(ctx context.Context, client *rtm.Client, progress io.Writer, s
 		client.AuthToken = ""
 	}
 
-	fmt.Fprintln(progress, "Requesting a frob…")
+	_, _ = fmt.Fprintln(progress, "Requesting a frob…")
 	frobResp, err := client.Auth.GetFrob(ctx)
 	if err != nil {
 		return err
@@ -109,20 +109,20 @@ func runAuthLogin(ctx context.Context, client *rtm.Client, progress io.Writer, s
 	frob := frobResp.Frob
 
 	authURL := buildAuthURL(client, frob, opts.Perms)
-	fmt.Fprintln(progress, "Open this URL in your browser to approve the request:")
-	fmt.Fprintln(progress, "  "+authURL)
+	_, _ = fmt.Fprintln(progress, "Open this URL in your browser to approve the request:")
+	_, _ = fmt.Fprintln(progress, "  "+authURL)
 	if !opts.NoBrowser {
 		if err := openBrowser(authURL); err != nil {
-			fmt.Fprintf(progress, "  (could not launch browser automatically: %v)\n", err)
+			_, _ = fmt.Fprintf(progress, "  (could not launch browser automatically: %v)\n", err)
 		}
 	}
 
-	fmt.Fprint(progress, "Press Enter once you've clicked \"Allow\"… ")
+	_, _ = fmt.Fprint(progress, "Press Enter once you've clicked \"Allow\"… ")
 	if _, err := bufio.NewReader(stdin).ReadString('\n'); err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("read confirmation: %w", err)
 	}
 
-	fmt.Fprintln(progress, "Exchanging frob for token…")
+	_, _ = fmt.Fprintln(progress, "Exchanging frob for token…")
 	tokenResp, err := client.Auth.GetToken(ctx, rtm.AuthGetTokenParams{Frob: frob})
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func runAuthLogin(ctx context.Context, client *rtm.Client, progress io.Writer, s
 	if err != nil {
 		return fmt.Errorf("verify token: %w", err)
 	}
-	fmt.Fprintf(
+	_, _ = fmt.Fprintf(
 		progress,
 		"Verified: logged in as %s (%s)\n",
 		checkResp.Auth.User.Username,
@@ -151,7 +151,7 @@ func runAuthLogin(ctx context.Context, client *rtm.Client, progress io.Writer, s
 	}); err != nil {
 		return err
 	}
-	fmt.Fprintf(progress, "Wrote token to %s\n", cfgPath)
+	_, _ = fmt.Fprintf(progress, "Wrote token to %s\n", cfgPath)
 	return nil
 }
 

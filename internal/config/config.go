@@ -233,7 +233,7 @@ func warnPerms(path string, w io.Writer) {
 	}
 	mode := info.Mode().Perm()
 	if mode&0o044 != 0 {
-		fmt.Fprintf(w, "warning: config file %s is readable by group or others (mode %o); consider chmod 600\n", path, mode)
+		_, _ = fmt.Fprintf(w, "warning: config file %s is readable by group or others (mode %o); consider chmod 600\n", path, mode)
 	}
 }
 
@@ -250,6 +250,6 @@ func warnUnknownKeys(path string, v *viper.Viper, w io.Writer) {
 	}
 	sort.Strings(unknown)
 	for _, k := range unknown {
-		fmt.Fprintf(w, "warning: config file %s has unknown key %q\n", path, k)
+		_, _ = fmt.Fprintf(w, "warning: config file %s has unknown key %q\n", path, k)
 	}
 }
