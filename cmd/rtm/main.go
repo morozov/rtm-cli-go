@@ -86,7 +86,14 @@ func newRootCommand() *cobra.Command {
 		func() *rtm.Client { return client },
 		func(w io.Writer, body any) error { return formatter(w, body) },
 	)
-	root.AddCommand(newManifestCommand())
+
+	const utilGroupID = "util"
+	root.AddGroup(&cobra.Group{ID: utilGroupID, Title: "Utilities:"})
+	root.SetHelpCommandGroupID(utilGroupID)
+	root.SetCompletionCommandGroupID(utilGroupID)
+	manifestCmd := newManifestCommand()
+	manifestCmd.GroupID = utilGroupID
+	root.AddCommand(manifestCmd)
 
 	// The generated `auth` group is a raw passthrough to RTM
 	// methods; `auth login` is hand-written on top and drives
