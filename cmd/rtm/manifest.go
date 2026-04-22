@@ -34,12 +34,13 @@ type manifestReference struct {
 
 // manifestFlag is the JSON shape for a single cobra flag.
 type manifestFlag struct {
-	Name        string `json:"name"`
-	Shorthand   string `json:"shorthand,omitempty"`
-	Type        string `json:"type"`
-	Description string `json:"description,omitempty"`
-	Default     string `json:"default,omitempty"`
-	Required    bool   `json:"required,omitempty"`
+	Name        string   `json:"name"`
+	Shorthand   string   `json:"shorthand,omitempty"`
+	Type        string   `json:"type"`
+	Description string   `json:"description,omitempty"`
+	Default     string   `json:"default,omitempty"`
+	Required    bool     `json:"required,omitempty"`
+	EnumValues  []string `json:"enum_values,omitempty"`
 }
 
 func newManifestCommand() *cobra.Command {
@@ -118,5 +119,6 @@ func manifestFlagFrom(f *pflag.Flag) manifestFlag {
 		Description: f.Usage,
 		Default:     f.DefValue,
 		Required:    required,
+		EnumValues:  f.Annotations["rtm-gen.enum"],
 	}
 }
