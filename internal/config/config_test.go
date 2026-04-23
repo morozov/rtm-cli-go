@@ -274,6 +274,20 @@ func TestWriteOnlyOverwritesNonEmpty(t *testing.T) {
 	assert.Equal(t, Config{APIKey: "keep-k", APISecret: "keep-s", AuthToken: "keep-t"}, cfg)
 }
 
+func TestWriteRejectsMalformedExisting(t *testing.T) {
+	dir := t.TempDir()
+	path := writeConfig(t, dir, ": this is : not : valid yaml :\n")
+
+	err := Write(path, Config{AuthToken: "tok"})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "parse existing")
+
+	// The original file must remain untouched after a parse failure.
+	data, readErr := os.ReadFile(path)
+	require.NoError(t, readErr)
+	assert.Equal(t, ": this is : not : valid yaml :\n", string(data))
+}
+
 func TestPathMatchesFilePath(t *testing.T) {
 	t.Setenv("RTM_CONFIG_FILE", "/custom/rtm.yaml")
 	p, err := Path()
