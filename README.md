@@ -6,32 +6,58 @@ Command-line client for the
 The RTM API client and cobra command tree under `internal/rtm/`
 and `internal/commands/` are produced from RTM's reflection
 spec by [rtm-gen-go](https://github.com/morozov/rtm-gen-go) and
-are **not** committed — `go generate` writes them on demand.
-If your IDE flags unresolved symbols in a fresh checkout, run
-`go generate ./...` first.
+are **not** committed — `go generate` writes them on demand. If
+your IDE flags unresolved symbols in a fresh checkout, run
+`make` (see [Building from source](#building-from-source)) once.
 
 ## Building from source
 
-Building requires three things:
+A Go toolchain (1.26+) is all you need at the system level;
+everything else (the generator, `goimports`, etc.) is pinned via
+the `tool` directive in `go.mod`.
 
-1. A Go toolchain (1.26+).
-2. A `spec.json` at the repo root. See
-   [rtm-gen-go](https://github.com/morozov/rtm-gen-go) for how
-   to obtain or refresh one.
-3. A local checkout of `rtm-gen-go` as a sibling directory
-   (`../rtm-gen-go/`). `go.mod` carries a local `replace` that
-   points there until `rtm-gen-go` is published.
+The `Makefile` wraps the build. What you run depends on whether
+you already have a `spec.json` at the repo root — it is
+gitignored, so fresh clones don't.
 
-### Build
+### First build (no spec.json yet)
+
+Export RTM API credentials and let the build fetch the
+reflection dump for you:
 
 ```sh
-go generate ./...       # produces internal/rtm/ and internal/commands/
-go build -o rtm ./cmd/rtm
+export RTM_API_KEY=your-key
+export RTM_API_SECRET=your-secret
+make
 ./rtm --help
 ```
 
-Every fresh clone (and every CI run) repeats these two steps;
-the generated output is never committed.
+This writes `spec.json`, runs `go generate ./...`, and produces
+`./rtm`.
+
+### Subsequent builds
+
+Once `spec.json` is on disk, `make` skips the fetch — no
+credentials needed:
+
+```sh
+make
+```
+
+### Refreshing the spec
+
+`spec.json` is not touched by subsequent builds. To pick up any
+upstream RTM changes, force a refresh:
+
+```sh
+make spec    # rewrites spec.json — needs RTM_API_KEY / RTM_API_SECRET
+make         # rebuild against the new spec
+```
+
+`spec.json` is gitignored; each developer and CI run maintains
+their own. The generated output under `internal/rtm/` and
+`internal/commands/` is never committed either — `make generate`
+rewrites it on demand.
 
 ## Configuration
 
@@ -89,9 +115,8 @@ token, and writes it atomically to the config file. If the
 config file already holds a working token, it refuses without
 `--force`; if the stored token is dead, it proceeds silently.
 
-There is no `rtm auth logout` — RTM has no server-side
-revocation endpoint. Revoke tokens from the
-[authorized-apps page](https://www.rememberthemilk.com/settings/apps)
+RTM has no server-side revocation endpoint. Revoke tokens from
+the [authorized-apps page](https://www.rememberthemilk.com/app/#settings/apps)
 in RTM's web UI.
 
 ## Run
@@ -204,19 +229,20 @@ rtm completion powershell | Out-String | Invoke-Expression
 
 ## Regenerate
 
-The generator is pinned via the `tool` directive in `go.mod`:
+The generator is pinned via the `tool` directive in `go.mod`.
+`make generate` runs `go generate ./...`, which rewrites both
+`internal/rtm/` and `internal/commands/` from the current
+`spec.json`. Use `make spec` to refresh `spec.json` itself; see
+[Building from source](#building-from-source) for when to use
+which.
 
-```sh
-go generate ./...
-```
-
-Both packages regenerate from `./spec.json`. See
-[rtm-gen-go](https://github.com/morozov/rtm-gen-go) for the
-flags and for live-fetch alternatives.
+See [rtm-gen-go](https://github.com/morozov/rtm-gen-go) for the
+underlying generator's flags.
 
 ## Distribution
 
 `go install github.com/morozov/rtm-cli-go/cmd/rtm@latest` is
 **not** supported — the module source on a proxy carries no
 generated code. Distribute pre-built binaries (e.g. GitHub
-releases) produced by a build that ran `go generate` first.
+releases) produced by a build that ran `make` (or `go generate`)
+first.
