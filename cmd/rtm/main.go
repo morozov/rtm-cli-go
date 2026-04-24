@@ -35,6 +35,10 @@ var ErrMissingCredentials = errors.New("missing RTM credentials")
 // other than the supported formatters.
 var ErrUnknownOutput = errors.New("unknown output format")
 
+// version is the release identifier baked into the binary. It is
+// overridden at release time via `-ldflags "-X main.version=vX.Y.Z"`.
+var version = "dev"
+
 func main() {
 	err := newRootCommand().Execute()
 	switch {
@@ -59,9 +63,11 @@ func newRootCommand() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "rtm",
 		Short:         "Remember The Milk CLI",
+		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
+	root.SetVersionTemplate("{{.Short}} {{.Version}}\n")
 	root.PersistentFlags().String("key", "", "RTM API key (or $RTM_API_KEY, or api_key in config)")
 	root.PersistentFlags().String("secret", "", "RTM API secret (or $RTM_API_SECRET, or api_secret in config)")
 	root.PersistentFlags().String("token", "", "RTM auth token (or $RTM_AUTH_TOKEN, or auth_token in config)")
