@@ -1,0 +1,45 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.locations.getList.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Retrieves a list of locations. This method call must be signed.",
+  "properties": {
+    "locations": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "latitude": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "viewable": {
+            "type": "boolean"
+          },
+          "zoom": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "viewable",
+          "zoom"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "title": "LocationsGetListResponse",
+  "type": "object"
+}

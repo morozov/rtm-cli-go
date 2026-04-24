@@ -1,0 +1,16 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.reflection.getMethods.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Returns a list of available Remember The Milk API methods.",
+  "properties": {
+    "methods": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "title": "ReflectionGetMethodsResponse",
+  "type": "object"
+}

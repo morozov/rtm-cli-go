@@ -1,0 +1,39 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.scripts.getList.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Retrieves a list of scripts. This method call must be signed.",
+  "properties": {
+    "scripts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "created": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "modified": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "title": "ScriptsGetListResponse",
+  "type": "object"
+}

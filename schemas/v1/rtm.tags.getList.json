@@ -1,0 +1,22 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.tags.getList.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Retrieves a list of tags. This method call must be signed.",
+  "properties": {
+    "tags": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "title": "TagsGetListResponse",
+  "type": "object"
+}

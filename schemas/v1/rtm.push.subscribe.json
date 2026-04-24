@@ -1,0 +1,44 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.push.subscribe.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Creates a new subscription. This method call must be signed. This method call requires a timeline.",
+  "properties": {
+    "subscription": {
+      "additionalProperties": false,
+      "properties": {
+        "expires": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "pending": {
+          "type": "boolean"
+        },
+        "topics": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "pending"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "subscription"
+  ],
+  "title": "PushSubscribeResponse",
+  "type": "object"
+}

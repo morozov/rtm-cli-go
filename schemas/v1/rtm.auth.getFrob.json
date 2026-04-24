@@ -1,0 +1,13 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.auth.getFrob.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Returns a frob to be used during authentication. This method call must be signed.",
+  "properties": {
+    "frob": {
+      "type": "string"
+    }
+  },
+  "title": "AuthGetFrobResponse",
+  "type": "object"
+}

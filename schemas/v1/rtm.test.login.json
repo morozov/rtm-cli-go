@@ -1,0 +1,28 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.test.login.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A testing method which checks if the caller is logged in. This method call must be signed.",
+  "properties": {
+    "user": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "user"
+  ],
+  "title": "TestLoginResponse",
+  "type": "object"
+}

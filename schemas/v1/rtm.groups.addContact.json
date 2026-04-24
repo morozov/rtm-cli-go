@@ -1,0 +1,8 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.groups.addContact.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Adds a contact to a group. This method call must be signed. This method call requires a timeline.",
+  "title": "GroupsAddContactResponse",
+  "type": "object"
+}

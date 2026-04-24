@@ -1,0 +1,16 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.timelines.create.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Returns a new timeline. This method call must be signed.",
+  "properties": {
+    "timeline": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "timeline"
+  ],
+  "title": "TimelinesCreateResponse",
+  "type": "object"
+}

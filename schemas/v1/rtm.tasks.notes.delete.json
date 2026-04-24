@@ -1,0 +1,8 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.tasks.notes.delete.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Deletes a note. This method call must be signed. This method call requires a timeline.",
+  "title": "TasksNotesDeleteResponse",
+  "type": "object"
+}

@@ -1,0 +1,16 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.push.getTopics.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Retrieves a list of subscription topics. This method call must be signed.",
+  "properties": {
+    "topics": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "title": "PushGetTopicsResponse",
+  "type": "object"
+}

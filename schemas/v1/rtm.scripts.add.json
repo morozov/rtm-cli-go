@@ -1,0 +1,39 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.scripts.add.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Creates a new script. This method call must be signed. This method call requires a timeline.",
+  "properties": {
+    "script": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "created": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "modified": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "script"
+  ],
+  "title": "ScriptsAddResponse",
+  "type": "object"
+}

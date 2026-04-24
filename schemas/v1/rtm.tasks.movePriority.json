@@ -1,0 +1,202 @@
+{
+  "$defs": {
+    "Contact": {
+      "additionalProperties": false,
+      "properties": {
+        "fullname": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Note": {
+      "additionalProperties": false,
+      "properties": {
+        "$t": {
+          "type": "string"
+        },
+        "created": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "modified": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Priority": {
+      "enum": [
+        "1",
+        "2",
+        "3",
+        "N"
+      ],
+      "type": "string"
+    },
+    "Rrule": {
+      "additionalProperties": false,
+      "properties": {
+        "$t": {
+          "type": "string"
+        },
+        "every": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Task": {
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "completed": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "deleted": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "due": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "estimate": {
+          "type": "string"
+        },
+        "has_due_time": {
+          "type": "boolean"
+        },
+        "has_start_time": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "postponed": {
+          "type": "integer"
+        },
+        "priority": {
+          "$ref": "#/$defs/Priority"
+        },
+        "start": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "has_due_time",
+        "has_start_time",
+        "id",
+        "postponed",
+        "priority"
+      ],
+      "type": "object"
+    },
+    "Taskseries": {
+      "additionalProperties": false,
+      "properties": {
+        "created": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "modified": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "$ref": "#/$defs/Note"
+          },
+          "type": "array"
+        },
+        "participants": {
+          "items": {
+            "$ref": "#/$defs/Contact"
+          },
+          "type": "array"
+        },
+        "rrule": {
+          "$ref": "#/$defs/Rrule"
+        },
+        "source": {
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "task": {
+          "items": {
+            "$ref": "#/$defs/Task"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.tasks.movePriority.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Moves the priority of a task up or down depending on direction. This method call must be signed. This method call requires a timeline.",
+  "properties": {
+    "list": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "taskseries": {
+          "items": {
+            "$ref": "#/$defs/Taskseries"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "list"
+  ],
+  "title": "TasksMovePriorityResponse",
+  "type": "object"
+}

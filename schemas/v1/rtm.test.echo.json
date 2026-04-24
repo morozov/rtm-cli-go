@@ -1,0 +1,16 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.test.echo.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A testing method which echos all parameters back in the response.",
+  "properties": {
+    "foo": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    }
+  },
+  "title": "TestEchoResponse",
+  "type": "object"
+}

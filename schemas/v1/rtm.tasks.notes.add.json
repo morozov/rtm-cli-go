@@ -1,0 +1,44 @@
+{
+  "$defs": {
+    "Note": {
+      "additionalProperties": false,
+      "properties": {
+        "$t": {
+          "type": "string"
+        },
+        "created": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "modified": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.tasks.notes.add.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Adds a new note to a task. This method call must be signed. This method call requires a timeline.",
+  "properties": {
+    "note": {
+      "$ref": "#/$defs/Note"
+    }
+  },
+  "required": [
+    "note"
+  ],
+  "title": "TasksNotesAddResponse",
+  "type": "object"
+}

@@ -1,0 +1,44 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.push.getSubscriptions.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Retrieves a list of active subscriptions. This method call must be signed.",
+  "properties": {
+    "subscriptions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "expires": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "boolean"
+          },
+          "topics": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "pending"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "title": "PushGetSubscriptionsResponse",
+  "type": "object"
+}

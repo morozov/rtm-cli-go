@@ -1,0 +1,55 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.lists.getList.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Retrieves a list of lists. This method call must be signed.",
+  "properties": {
+    "lists": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "archived": {
+            "type": "boolean"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "filter": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "smart": {
+            "type": "boolean"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "archived",
+          "deleted",
+          "id",
+          "locked",
+          "position",
+          "smart",
+          "sort_order"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "title": "ListsGetListResponse",
+  "type": "object"
+}

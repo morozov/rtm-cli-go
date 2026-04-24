@@ -1,0 +1,52 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.lists.unarchive.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Unarchives a list. This method call must be signed. This method call requires a timeline.",
+  "properties": {
+    "list": {
+      "additionalProperties": false,
+      "properties": {
+        "archived": {
+          "type": "boolean"
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "position": {
+          "type": "integer"
+        },
+        "smart": {
+          "type": "boolean"
+        },
+        "sort_order": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "archived",
+        "deleted",
+        "id",
+        "locked",
+        "position",
+        "smart",
+        "sort_order"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "list"
+  ],
+  "title": "ListsUnarchiveResponse",
+  "type": "object"
+}

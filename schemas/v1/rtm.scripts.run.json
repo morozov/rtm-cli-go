@@ -1,0 +1,25 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.scripts.run.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Runs a script. This method call must be signed. This method call requires a timeline.",
+  "properties": {
+    "execution": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "execution"
+  ],
+  "title": "ScriptsRunResponse",
+  "type": "object"
+}

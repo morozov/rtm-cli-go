@@ -1,0 +1,84 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.reflection.getMethodInfo.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Returns information for a given Remember The Milk API method.",
+  "properties": {
+    "method": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "$t": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "optional": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "optional"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "description": {
+          "type": "string"
+        },
+        "errors": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "$t": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "needslogin": {
+          "type": "boolean"
+        },
+        "needssigning": {
+          "type": "boolean"
+        },
+        "requiredperms": {
+          "type": "integer"
+        },
+        "response": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "needslogin",
+        "needssigning",
+        "requiredperms"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "method"
+  ],
+  "title": "ReflectionGetMethodInfoResponse",
+  "type": "object"
+}

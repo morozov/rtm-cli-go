@@ -1,0 +1,57 @@
+{
+  "$defs": {
+    "Perms": {
+      "enum": [
+        "read",
+        "write",
+        "delete"
+      ],
+      "type": "string"
+    }
+  },
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.auth.getToken.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Returns the auth token for the given frob, if one has been attached. This method call must be signed.",
+  "properties": {
+    "auth": {
+      "additionalProperties": false,
+      "properties": {
+        "perms": {
+          "$ref": "#/$defs/Perms"
+        },
+        "token": {
+          "type": "string"
+        },
+        "user": {
+          "additionalProperties": false,
+          "properties": {
+            "fullname": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "perms",
+        "user"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "auth"
+  ],
+  "title": "AuthGetTokenResponse",
+  "type": "object"
+}

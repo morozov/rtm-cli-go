@@ -1,0 +1,8 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.transactions.undo.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Reverts the affects of an action. This method call must be signed. This method call requires a timeline.",
+  "title": "TransactionsUndoResponse",
+  "type": "object"
+}

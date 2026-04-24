@@ -1,0 +1,36 @@
+{
+  "$defs": {
+    "Contact": {
+      "additionalProperties": false,
+      "properties": {
+        "fullname": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.contacts.add.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Adds a new contact. contact should be a username or email address of a Remember The Milk user. This method call must be signed. This method call requires a timeline.",
+  "properties": {
+    "contact": {
+      "$ref": "#/$defs/Contact"
+    }
+  },
+  "required": [
+    "contact"
+  ],
+  "title": "ContactsAddResponse",
+  "type": "object"
+}

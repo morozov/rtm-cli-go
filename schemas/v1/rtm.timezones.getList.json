@@ -1,0 +1,40 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.timezones.getList.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Retrieves a list of timezones. This method call must be signed.",
+  "properties": {
+    "timezones": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "current_offset": {
+            "type": "integer"
+          },
+          "dst": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "current_offset",
+          "dst",
+          "id",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "title": "TimezonesGetListResponse",
+  "type": "object"
+}

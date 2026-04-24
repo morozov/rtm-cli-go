@@ -1,0 +1,25 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.time.convert.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Returns the specified time in the desired timezone. This method call must be signed.",
+  "properties": {
+    "time": {
+      "additionalProperties": false,
+      "properties": {
+        "$t": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "time"
+  ],
+  "title": "TimeConvertResponse",
+  "type": "object"
+}

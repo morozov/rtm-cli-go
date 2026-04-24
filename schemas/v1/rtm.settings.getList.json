@@ -1,0 +1,46 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.settings.getList.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Retrieves a list of user settings. timezone - The user's Olson timezone. Blank if the user has not set a timezone. dateformat - 0 indicates an European date format (e.g. 14/02/06), 1 indicates an American date format (e.g. 02/14/06). timeformat - 0 indicates 12 hour time with day period (e.g. 5pm), 1 indicates 24 hour time (e.g. 17:00). defaultlist - The user's default list. Blank if the user has not set a default list. language - The user's language (ISO 639-1 code). defaultduedate - The user's default due date. Blank if the user has not set a default due date. pro - 0 indicates a Basic account, 1 indicates a Pro account. This method call must be signed.",
+  "properties": {
+    "settings": {
+      "additionalProperties": false,
+      "properties": {
+        "dateformat": {
+          "type": "integer"
+        },
+        "defaultduedate": {
+          "type": "string"
+        },
+        "defaultlist": {
+          "type": "integer"
+        },
+        "language": {
+          "type": "string"
+        },
+        "pro": {
+          "type": "boolean"
+        },
+        "timeformat": {
+          "type": "integer"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dateformat",
+        "defaultlist",
+        "pro",
+        "timeformat"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "settings"
+  ],
+  "title": "SettingsGetListResponse",
+  "type": "object"
+}

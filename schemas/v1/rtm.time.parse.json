@@ -1,0 +1,25 @@
+{
+  "$id": "https://morozov.github.io/rtm-cli-go/schemas/v1/rtm.time.parse.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Returns the time, in UTC, for the parsed input.",
+  "properties": {
+    "time": {
+      "additionalProperties": false,
+      "properties": {
+        "$t": {
+          "type": "string"
+        },
+        "precision": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "time"
+  ],
+  "title": "TimeParseResponse",
+  "type": "object"
+}
