@@ -2,8 +2,13 @@
 /rtm
 
 # Generated code. Produced by `go generate ./...` on every build;
-# never committed. Only the hand-written gen.go anchors are tracked.
+# never committed. Only the hand-written gen.go anchors and the
+# schemas subpackage (which has handwritten schemas.go alongside
+# generated *.json files) are tracked.
 /internal/rtm/*
 !/internal/rtm/gen.go
+!/internal/rtm/schemas
+/internal/rtm/schemas/*.json
+/internal/rtm/schemas/VERSION
 /internal/commands/*
 !/internal/commands/gen.go

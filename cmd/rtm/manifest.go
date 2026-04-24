@@ -6,6 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/morozov/rtm-cli-go/internal/rtm/schemas"
 )
 
 // manifestCommandName is the subcommand a consumer invokes to
@@ -20,9 +22,11 @@ type manifestNode struct {
 	Name            string              `json:"name"`
 	Short           string              `json:"short,omitempty"`
 	Long            string              `json:"long,omitempty"`
+	RTMMethod       string              `json:"rtm_method,omitempty"`
 	Flags           []manifestFlag      `json:"flags,omitempty"`
 	PersistentFlags []manifestFlag      `json:"persistent_flags,omitempty"`
 	References      []manifestReference `json:"references,omitempty"`
+	ResponseSchema  json.RawMessage     `json:"response_schema,omitempty"`
 	Commands        []manifestNode      `json:"commands,omitempty"`
 }
 
@@ -68,6 +72,12 @@ func collectManifestNode(c *cobra.Command) manifestNode {
 		Name:  c.Name(),
 		Short: c.Short,
 		Long:  c.Long,
+	}
+	if method, ok := c.Annotations[rtmMethodAnnotation]; ok {
+		node.RTMMethod = method
+		if schema := schemas.For(method); schema != nil {
+			node.ResponseSchema = schema
+		}
 	}
 	for _, r := range collectReferences(c) {
 		node.References = append(node.References, manifestReference{

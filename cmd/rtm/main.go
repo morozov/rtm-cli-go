@@ -14,7 +14,17 @@ import (
 	"github.com/morozov/rtm-cli-go/internal/config"
 	"github.com/morozov/rtm-cli-go/internal/output"
 	"github.com/morozov/rtm-cli-go/internal/rtm"
+	"github.com/morozov/rtm-cli-go/internal/rtm/schemas"
 )
+
+// rtmMethodAnnotation is the cobra annotation key the generator
+// stamps onto each RTM method command. Its value is the full
+// RTM method name (e.g. "rtm.lists.getList").
+const rtmMethodAnnotation = "rtm-gen.method"
+
+// schemaFlagName is the persistent flag that prints the method's
+// response JSON Schema and exits without making an HTTP call.
+const schemaFlagName = "schema"
 
 // ErrMissingCredentials is returned when the resolved
 // configuration does not carry both --key and --secret (via flag,
@@ -56,9 +66,13 @@ func newRootCommand() *cobra.Command {
 	root.PersistentFlags().String("secret", "", "RTM API secret (or $RTM_API_SECRET, or api_secret in config)")
 	root.PersistentFlags().String("token", "", "RTM auth token (or $RTM_AUTH_TOKEN, or auth_token in config)")
 	root.PersistentFlags().StringVarP(&outputFormat, "output", "o", "json", "output format: json or yaml")
+	root.PersistentFlags().Bool(schemaFlagName, false, "print this command's response JSON Schema and exit (no RTM call)")
 
 	root.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
 		if cmd.Name() == manifestCommandName {
+			return nil
+		}
+		if printSchema, _ := cmd.Flags().GetBool(schemaFlagName); printSchema {
 			return nil
 		}
 		cfg, err := config.Load(cmd.Root().PersistentFlags())
@@ -86,6 +100,7 @@ func newRootCommand() *cobra.Command {
 		func() *rtm.Client { return client },
 		func(w io.Writer, body any) error { return formatter(w, body) },
 	)
+	wrapRTMCommandsWithSchemaFlag(root)
 
 	const utilGroupID = "util"
 	root.AddGroup(&cobra.Group{ID: utilGroupID, Title: "Utilities:"})
@@ -162,4 +177,33 @@ func collectReferences(cmd *cobra.Command) []commandReference {
 		refs = append(refs, commandReference{N: n, URL: url})
 	}
 	return refs
+}
+
+// wrapRTMCommandsWithSchemaFlag walks the command tree and
+// injects a --schema short-circuit into every command that
+// represents an RTM method. When --schema is set, the wrapped
+// RunE prints the method's embedded JSON Schema and returns
+// without invoking the original RTM-calling body.
+func wrapRTMCommandsWithSchemaFlag(root *cobra.Command) {
+	var walk func(*cobra.Command)
+	walk = func(c *cobra.Command) {
+		if method, ok := c.Annotations[rtmMethodAnnotation]; ok && c.RunE != nil {
+			orig := c.RunE
+			c.RunE = func(cmd *cobra.Command, args []string) error {
+				if printSchema, _ := cmd.Flags().GetBool(schemaFlagName); printSchema {
+					data := schemas.For(method)
+					if data == nil {
+						return fmt.Errorf("no embedded schema for %s", method)
+					}
+					_, err := cmd.OutOrStdout().Write(data)
+					return err
+				}
+				return orig(cmd, args)
+			}
+		}
+		for _, sub := range c.Commands() {
+			walk(sub)
+		}
+	}
+	walk(root)
 }

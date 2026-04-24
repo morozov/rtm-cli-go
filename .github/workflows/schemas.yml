@@ -1,0 +1,108 @@
+name: Publish schemas
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+
+concurrency:
+  # Only one publication at a time; queue rather than cancel, so a
+  # late main push doesn't race an earlier one.
+  group: schemas-publish
+  cancel-in-progress: false
+
+# The workflow commits to `gh-pages`, so it needs write access
+# to repository contents.
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Overlay schemas onto gh-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v6
+        with:
+          path: main
+          fetch-depth: 1
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: main/go.mod
+
+      - name: Fetch spec.json from RTM
+        working-directory: main
+        env:
+          RTM_API_KEY: ${{ secrets.RTM_API_KEY }}
+          RTM_API_SECRET: ${{ secrets.RTM_API_SECRET }}
+        run: make spec
+
+      - name: Generate schemas
+        working-directory: main
+        run: go generate ./internal/rtm/schemas/...
+
+      - name: Read schema major version
+        id: version
+        working-directory: main
+        run: |
+          major=$(cat internal/rtm/schemas/VERSION | tr -d '[:space:]')
+          if ! [[ "$major" =~ ^[0-9]+$ ]]; then
+            echo "::error::Unexpected VERSION contents: $major"
+            exit 1
+          fi
+          echo "major=$major" >> "$GITHUB_OUTPUT"
+
+      - name: Check out gh-pages
+        uses: actions/checkout@v6
+        with:
+          ref: gh-pages
+          path: gh-pages
+          fetch-depth: 1
+        continue-on-error: true
+
+      - name: Bootstrap gh-pages if missing
+        run: |
+          if [ ! -d gh-pages/.git ]; then
+            echo "Creating empty gh-pages branch"
+            rm -rf gh-pages
+            mkdir gh-pages
+            cd gh-pages
+            git init -b gh-pages
+            git remote add origin "https://github.com/${{ github.repository }}.git"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            echo "# Schema publication branch" > README.md
+            echo "" >> README.md
+            echo "This orphan branch hosts JSON Schema documents for rtm-cli-go's CLI output." >> README.md
+            echo "Every directory matches a schema contract major; see spec 014 and the source on main." >> README.md
+            git add README.md
+            git commit -m "Bootstrap gh-pages" --allow-empty
+          fi
+
+      - name: Overlay current major
+        run: |
+          major="${{ steps.version.outputs.major }}"
+          target="gh-pages/schemas/v${major}"
+          mkdir -p "$target"
+          # Wipe the current major's files so method removals
+          # take effect within this major, but never touch other
+          # majors' directories.
+          find "$target" -type f -name '*.json' -delete
+          cp main/internal/rtm/schemas/*.json "$target/"
+
+      - name: Commit and push
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add schemas/
+          if git diff --cached --quiet; then
+            echo "No schema changes to publish."
+            exit 0
+          fi
+          git commit -m "Publish schemas v${{ steps.version.outputs.major }} from ${GITHUB_SHA::7}"
+          git push --set-upstream origin gh-pages

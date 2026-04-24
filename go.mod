@@ -141,7 +141,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moricho/tparallel v0.3.2 // indirect
-	github.com/morozov/rtm-gen-go v0.1.0 // indirect
+	github.com/morozov/rtm-gen-go v0.2.0 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nishanths/exhaustive v0.12.0 // indirect
@@ -222,5 +222,3 @@ tool (
 	github.com/morozov/rtm-gen-go/cmd/rtm-gen
 	golang.org/x/tools/cmd/goimports
 )
-
-replace github.com/morozov/rtm-gen-go => ../rtm-gen-go
