@@ -4,17 +4,20 @@
 # RTM_API_SECRET in the environment. A pre-existing spec.json skips
 # the fetch entirely.
 
-BINARY ?= rtm
-SPEC   ?= spec.json
+BUILD_DIR  ?= .
+SPEC       ?= spec.json
+VERSION    ?= dev
 
 .PHONY: build generate spec check
 
 build: $(SPEC)
-	go generate ./...
-	go build -o $(BINARY) ./cmd/rtm
+	GOOS= GOARCH= go generate ./...
+	mkdir -p $(BUILD_DIR)
+	go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" \
+		-o $(BUILD_DIR)/ ./cmd/rtm
 
 generate:
-	go generate ./...
+	GOOS= GOARCH= go generate ./...
 
 spec $(SPEC):
 	@[ -n "$(RTM_API_KEY)" ] && [ -n "$(RTM_API_SECRET)" ] \

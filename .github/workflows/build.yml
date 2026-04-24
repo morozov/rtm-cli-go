@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version string (e.g. v1.2.3 or dev-abc1234)
+        required: true
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: ${{ matrix.artifact }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            artifact: rtm-linux-amd64
+          - goos: linux
+            goarch: arm64
+            artifact: rtm-linux-arm64
+          - goos: darwin
+            goarch: arm64
+            artifact: rtm-darwin-arm64
+          - goos: windows
+            goarch: amd64
+            artifact: rtm-windows-amd64
+          - goos: windows
+            goarch: arm64
+            artifact: rtm-windows-arm64
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Fetch spec.json from RTM
+        env:
+          RTM_API_KEY: ${{ secrets.RTM_API_KEY }}
+          RTM_API_SECRET: ${{ secrets.RTM_API_SECRET }}
+        run: make spec
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: make build BUILD_DIR=build VERSION=${{ inputs.version }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: build/rtm*
+          if-no-files-found: error
