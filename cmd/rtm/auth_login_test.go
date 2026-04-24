@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -58,31 +58,19 @@ func newRTMStub(t *testing.T, s rtmStub) *httptest.Server {
 		case "rtm.auth.checkToken":
 			tok := q.Get("auth_token")
 			if s.liveTokens[tok] {
-				writeOK(w, map[string]any{
-					"auth": map[string]any{
-						"token": tok,
-						"perms": "read",
-						"user":  map[string]any{"id": "1", "username": "bob", "fullname": "Bob M."},
-					},
-				})
+				writeAuthOK(w, tok)
 				return
 			}
 			writeFail(w, "98", "Login failed / Invalid auth token")
 		case "rtm.auth.getFrob":
-			writeOK(w, map[string]any{"frob": s.frob})
+			writeOK(w, "<frob>"+s.frob+"</frob>")
 		case "rtm.auth.getToken":
 			tok, ok := s.tokenForFrob[q.Get("frob")]
 			if !ok {
 				http.Error(w, "unknown frob", http.StatusBadRequest)
 				return
 			}
-			writeOK(w, map[string]any{
-				"auth": map[string]any{
-					"token": tok,
-					"perms": "read",
-					"user":  map[string]any{"id": "1", "username": "bob", "fullname": "Bob M."},
-				},
-			})
+			writeAuthOK(w, tok)
 		default:
 			t.Errorf("unexpected RTM method: %q", q.Get("method"))
 			http.Error(w, "bad", http.StatusInternalServerError)
@@ -92,18 +80,20 @@ func newRTMStub(t *testing.T, s rtmStub) *httptest.Server {
 	return srv
 }
 
-func writeOK(w http.ResponseWriter, fields map[string]any) {
-	fields["stat"] = "ok"
-	_ = json.NewEncoder(w).Encode(map[string]any{"rsp": fields})
+func writeOK(w http.ResponseWriter, body string) {
+	_, _ = fmt.Fprintf(w, `<rsp stat="ok">%s</rsp>`, body)
+}
+
+func writeAuthOK(w http.ResponseWriter, token string) {
+	writeOK(w, fmt.Sprintf(
+		`<auth><token>%s</token><perms>read</perms>`+
+			`<user id="1" username="bob" fullname="Bob M."/></auth>`,
+		token,
+	))
 }
 
 func writeFail(w http.ResponseWriter, code, msg string) {
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"rsp": map[string]any{
-			"stat": "fail",
-			"err":  map[string]any{"code": code, "msg": msg},
-		},
-	})
+	_, _ = fmt.Fprintf(w, `<rsp stat="fail"><err code=%q msg=%q/></rsp>`, code, msg)
 }
 
 func newClientFor(t *testing.T, srv *httptest.Server, authToken string) *rtm.Client {

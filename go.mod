@@ -222,3 +222,5 @@ tool (
 	github.com/morozov/rtm-gen-go/cmd/rtm-gen
 	golang.org/x/tools/cmd/goimports
 )
+
+replace github.com/morozov/rtm-gen-go => ../rtm-gen-go

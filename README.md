@@ -152,10 +152,13 @@ rtm lists get-list -o yaml        # short form
 ```
 
 Both formats emit typed values — integer IDs are numbers, not
-strings; booleans are `true`/`false`, not `"0"`/`"1"`; empty
-timestamps are `null`, not `""`. Enum fields (`priority`,
-`perms`, `direction`) render as their wire values (`"N"`,
-`"read"`, `"up"`).
+strings; booleans are `true`/`false`, not `"0"`/`"1"`. Absent
+fields are omitted entirely rather than rendered as `""` or
+`null`: empty string attrs, empty slices, and absent timestamps
+all drop out of the output. Boolean and integer zero values
+(`false`, `0`) are kept — those carry meaning distinct from
+absence. Enum fields (`priority`, `perms`, `direction`) render
+as their wire values (`"N"`, `"read"`, `"up"`).
 
 ## Exit codes
 
