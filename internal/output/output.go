@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -35,11 +34,10 @@ func JSON(w io.Writer, body any) error {
 // The implementation round-trips through json.Marshal so the
 // generator's wrapper types (rtmBool, rtmInt, rtmTime) emit via
 // their MarshalJSON methods rather than yaml.v3's reflection
-// path. The JSON is then re-decoded with json.Decoder.UseNumber,
-// and numeric-shaped json.Number values are narrowed into int64
-// (when there's no decimal or exponent) or float64 — otherwise
-// yaml.v3 would render every integer as a float in scientific
-// notation (`1.674089e+06` for a 7-digit RTM id).
+// path. The intermediate JSON is parsed back into a yaml.Node
+// — yaml.v3 reads JSON natively, and Node preserves the source
+// document's key order, so YAML output keeps the same field
+// order as the JSON output instead of sorting alphabetically.
 func YAML(w io.Writer, body any) error {
 	if isEmpty(body) {
 		return nil
@@ -48,14 +46,12 @@ func YAML(w io.Writer, body any) error {
 	if err != nil {
 		return fmt.Errorf("encode intermediate json: %w", err)
 	}
-	dec := json.NewDecoder(bytes.NewReader(raw))
-	dec.UseNumber()
-	var v any
-	if err := dec.Decode(&v); err != nil {
+	var node yaml.Node
+	if err := yaml.Unmarshal(raw, &node); err != nil {
 		return fmt.Errorf("decode intermediate json: %w", err)
 	}
-	v = narrowNumbers(v)
-	out, err := yaml.Marshal(v)
+	clearStyle(&node)
+	out, err := yaml.Marshal(&node)
 	if err != nil {
 		return fmt.Errorf("encode yaml: %w", err)
 	}
@@ -65,34 +61,16 @@ func YAML(w io.Writer, body any) error {
 	return nil
 }
 
-// narrowNumbers walks v and replaces every json.Number with
-// either int64 (when the source had no decimal point or
-// exponent) or float64. Leaves other types untouched.
-func narrowNumbers(v any) any {
-	switch x := v.(type) {
-	case map[string]any:
-		for k, val := range x {
-			x[k] = narrowNumbers(val)
-		}
-		return x
-	case []any:
-		for i, val := range x {
-			x[i] = narrowNumbers(val)
-		}
-		return x
-	case json.Number:
-		s := string(x)
-		if !strings.ContainsAny(s, ".eE") {
-			if n, err := x.Int64(); err == nil {
-				return n
-			}
-		}
-		if f, err := x.Float64(); err == nil {
-			return f
-		}
-		return s
+// clearStyle resets the source-style flag on every node so that
+// JSON parsed via yaml.Unmarshal — which preserves the source's
+// flow form and double-quoted scalars — re-emits as conventional
+// block YAML with plain scalars (yaml.v3 still adds quotes when
+// the content would otherwise be ambiguous).
+func clearStyle(n *yaml.Node) {
+	n.Style = 0
+	for _, c := range n.Content {
+		clearStyle(c)
 	}
-	return v
 }
 
 // isEmpty returns true when body carries no information worth
