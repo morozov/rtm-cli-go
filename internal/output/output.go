@@ -51,12 +51,13 @@ func YAML(w io.Writer, body any) error {
 		return fmt.Errorf("decode intermediate json: %w", err)
 	}
 	clearStyle(&node)
-	out, err := yaml.Marshal(&node)
-	if err != nil {
+	enc := yaml.NewEncoder(w)
+	enc.SetIndent(2)
+	if err := enc.Encode(&node); err != nil {
 		return fmt.Errorf("encode yaml: %w", err)
 	}
-	if _, err := w.Write(out); err != nil {
-		return fmt.Errorf("write yaml: %w", err)
+	if err := enc.Close(); err != nil {
+		return fmt.Errorf("close yaml encoder: %w", err)
 	}
 	return nil
 }
