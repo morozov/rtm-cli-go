@@ -11,6 +11,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "topics"
+  ],
   "title": "PushGetTopicsResponse",
   "type": "object"
 }

@@ -34,6 +34,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "scripts"
+  ],
   "title": "ScriptsGetListResponse",
   "type": "object"
 }

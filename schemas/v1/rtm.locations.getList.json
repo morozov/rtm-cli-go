@@ -40,6 +40,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "locations"
+  ],
   "title": "LocationsGetListResponse",
   "type": "object"
 }

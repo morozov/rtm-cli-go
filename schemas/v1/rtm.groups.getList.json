@@ -43,6 +43,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "groups"
+  ],
   "title": "GroupsGetListResponse",
   "type": "object"
 }

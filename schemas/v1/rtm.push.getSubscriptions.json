@@ -39,6 +39,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "subscriptions"
+  ],
   "title": "PushGetSubscriptionsResponse",
   "type": "object"
 }

@@ -17,6 +17,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "tags"
+  ],
   "title": "TagsGetListResponse",
   "type": "object"
 }

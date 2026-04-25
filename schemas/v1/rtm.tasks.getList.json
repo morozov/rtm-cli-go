@@ -203,6 +203,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "tasks"
+  ],
   "title": "TasksGetListResponse",
   "type": "object"
 }

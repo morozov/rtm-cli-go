@@ -50,6 +50,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "lists"
+  ],
   "title": "ListsGetListResponse",
   "type": "object"
 }

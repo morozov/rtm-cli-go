@@ -31,6 +31,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "contacts"
+  ],
   "title": "ContactsGetListResponse",
   "type": "object"
 }

@@ -35,6 +35,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "timezones"
+  ],
   "title": "TimezonesGetListResponse",
   "type": "object"
 }

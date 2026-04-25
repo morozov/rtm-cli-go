@@ -11,6 +11,9 @@
       "type": "array"
     }
   },
+  "required": [
+    "methods"
+  ],
   "title": "ReflectionGetMethodsResponse",
   "type": "object"
 }
