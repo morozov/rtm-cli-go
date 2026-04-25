@@ -160,6 +160,55 @@ all drop out of the output. Boolean and integer zero values
 absence. Enum fields (`priority`, `perms`, `direction`) render
 as their wire values (`"N"`, `"read"`, `"up"`).
 
+## Differences from the web and mobile apps
+
+The CLI is an RTM API client, not a UI. It mirrors the API
+surface with as little of its own opinion as possible, which
+makes the output look noticeably different from the official
+clients:
+
+- **No tabular default.** The API doesn't designate a canonical
+  field set, so the CLI doesn't pick one. Output is JSON (or
+  YAML); pipe through `jq` if you want columns, e.g.
+  `rtm lists get-list | jq -r '.lists[] | [.id, .name] | @tsv'`.
+
+- **No sorting.** Element order in API responses is unspecified
+  and the CLI passes it through verbatim. The web and mobile
+  apps apply their own ordering — by `position` for lists in
+  the sidebar, by each list's `sort_order` for tasks within it.
+  The CLI does none of that. Sort downstream, e.g.
+  `rtm lists get-list | jq '.lists | sort_by(.position)'`.
+
+- **No filtering of deleted or archived items.** The API returns
+  every list, including archived ones the web and mobile UIs
+  hide by default. Filter downstream, e.g.
+  `rtm lists get-list | jq '.lists | map(select(.deleted == false and .archived == false))'`.
+
+- **Different JSON schema.** RTM's native JSON is a mechanical
+  XML transcription — repeated child elements come wrapped in
+  a singular-named array (`{"contacts": {"contact": [...]}}`),
+  scalars arrive as strings (`"id": "1"`, `"optional": "0"`),
+  element text uses a magic `$t` key, and absent values become
+  `""` sentinels. The CLI re-derives a cleaner JSON form from
+  the XML response: a flat array at the natural plural key
+  (`{"contacts": [...]}`), integer IDs as numbers, booleans as
+  booleans, absent fields omitted. See [Output
+  formats](#output-formats) for the full rules, and
+  [Programmatic discovery](#programmatic-discovery) for how to
+  inspect the schema of any command.
+
+For reference, an approximation of the web/mobile sidebar —
+non-deleted, non-archived, ordered by position then name —
+combines all three operations:
+
+```sh
+rtm lists get-list \
+  | jq -r '.lists
+           | map(select(.deleted == false and .archived == false))
+           | sort_by(.position, .name)
+           | .[] | [.id, .name] | @tsv'
+```
+
 ## Exit codes
 
 - `0` — success.
@@ -168,46 +217,34 @@ as their wire values (`"N"`, `"read"`, `"up"`).
   carries the RTM code and description, e.g.
   `rtm api error 98: Login failed / Invalid auth token`.
 
-## Typed flags and enums
-
-Arguments with a known semantic type are declared as typed cobra
-flags — `--list-id=1` accepts an integer, `--archive` accepts a
-bool. Mistyped values fail locally with cobra's standard error
-before any HTTP call.
-
-Enum arguments (`--priority`, `--direction`) validate against a
-closed set and register shell completion:
-
-```sh
-rtm tasks set-priority --priority=banana ...
-# Error: invalid --priority "banana": expected 1, 2, 3, N
-```
-
-Comma-delimited list args (`--tags`) accept both repeated flags
-and one comma-joined value:
-
-```sh
-rtm tasks set-tags ... --tags=urgent --tags=review
-rtm tasks set-tags ... --tags=urgent,review
-```
-
 ## Programmatic discovery
 
-Tooling and AI agents can enumerate the full CLI surface in a
-single call:
+Two introspection entry points, neither of which calls RTM or
+needs credentials.
+
+**Full CLI surface** — `rtm manifest` emits a single JSON
+document describing every subcommand: short and long
+descriptions, plus each flag's name, type, description,
+default, `required`, and `enum_values` when the flag is a
+closed set. Reference footnotes (`[^N]`) carried over from
+RTM's docs are preserved. Use it instead of crawling
+`rtm --help` recursively.
 
 ```sh
 rtm manifest
 ```
 
-The command walks the cobra tree and emits JSON: every
-subcommand, its short/long descriptions, and its flags (name,
-type, description, default, `required`, `enum_values` when the
-flag is a closed set, plus any `[^N]` reference footnotes from
-RTM's docs). Use it instead of crawling `rtm --help` recursively.
+**Per-command response shape** — every leaf command accepts
+`--schema`, which prints that command's response JSON Schema
+(draft 2020-12) and exits without calling RTM:
 
-Credentials are not required — `manifest` is pure introspection
-and never touches RTM.
+```sh
+rtm contacts get-list --schema
+rtm tasks get-list --schema
+```
+
+Combined, `manifest` answers "what can I run?" and `--schema`
+answers "what will I get back?".
 
 ## Shell completion
 
